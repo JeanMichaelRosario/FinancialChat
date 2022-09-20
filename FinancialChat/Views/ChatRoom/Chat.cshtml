@@ -39,7 +39,12 @@
 </div>
 
 <script>
-    $(".message:last").get(0).scrollIntoView();
+    var lastMessage = $(".message:last");
+
+    if(lastMessage.length > 0)
+    {
+        lastMessage.get(0).scrollIntoView();
+    }
     
     if(connection === undefined)
     {
