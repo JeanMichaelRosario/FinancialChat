@@ -34,5 +34,22 @@ namespace FinancialChat.Controllers.Identity
 
             return PartialView();
         }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateChatRoom(string name)
+        {
+            if (!string.IsNullOrEmpty(name))
+            {
+                var chat = new ChatRoom()
+                {
+                    Id = Guid.NewGuid(),
+                    Name = name
+                };
+                _context.ChatRooms.Add(chat);
+                await _context.SaveChangesAsync();
+                return RedirectToAction("Index");
+            }
+            return BadRequest("The name of the chatroom cannot be empty");
+        }
     }
 }
