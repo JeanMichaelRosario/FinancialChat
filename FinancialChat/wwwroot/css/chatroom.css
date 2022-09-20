@@ -20,7 +20,8 @@
 
 .chat-app .chat {
     margin-left: 280px;
-    border-left: 1px solid #eaeaea
+    border-left: 1px solid #eaeaea;
+    min-height: 700px;
 }
 
 .people-list {
@@ -89,7 +90,8 @@
     padding: 20px;
     border-bottom: 2px solid #fff;
     overflow-y: scroll;
-    max-height: 500px;
+    max-height: 480px;
+    min-height: 480px;
 }
 
     .chat .chat-history ul {

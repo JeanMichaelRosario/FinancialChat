@@ -39,29 +39,35 @@
 </div>
 
 <script>
-    "use strict";
-    var userId = '@userId';
-    var connection = new signalR.HubConnectionBuilder().withUrl("/chat").build();
+    $(".message:last").get(0).scrollIntoView();
+    
+    if(connection === undefined)
+    {
+        var userId = '@userId';
+        var chatId = '@chat.Id';
 
-    //Disable the send button until connection is established.
-    document.getElementById("sendButton").disabled = true;
+        //Disable the send button until connection is established.
+        document.getElementById("sendButton").disabled = true;
 
-    connection.on("ReceiveMessage", function (data) {
-        var classForMessage = ((data.userId == userId) ? 'my-message' : 'other-message float-right');
-        var message =`
-                <li class="clearfix">
-                            <div class="message ${classForMessage}">${data.message}</div>
-                    </li>
-        `;
-        $("#chat-messages").append(message);
-        $(".message:last").get(0).scrollIntoView();
-    });
+        var connection = new signalR.HubConnectionBuilder().withUrl("/chat").build();
 
-    connection.start().then(function () {
-        document.getElementById("sendButton").disabled = false;
-    }).catch(function (err) {
-        return console.error(err.toString());
-    });
+        connection.on("ReceiveMessage", function (data) {
+            var classForMessage = ((data.userId == userId) ? 'my-message' : 'other-message float-right');
+            var message = `
+                        <li class="clearfix">
+                                    <div class="message ${classForMessage}">${data.message}</div>
+                            </li>
+                `;
+            $("#chat-messages").append(message);
+            $(".message:last").get(0).scrollIntoView();
+        });
+
+        connection.start().then(function () {
+            document.getElementById("sendButton").disabled = false;
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+    }
 
     document.getElementById("textMessage")
         .addEventListener("keyup", function (event) {
@@ -71,11 +77,11 @@
             }
         });
 
-    document.getElementById("sendButton").addEventListener("click", function (event) {
+    $("#sendButton").click(function (event) {
         var message = document.getElementById("textMessage").value;
         var data = {
-            UserId: '@userId',
-            ChatId: '@chat.Id',
+            UserId: userId,
+            ChatId: chatId,
             Message: message,
         }
         connection.invoke("SendMessage", data).catch(function (err) {
