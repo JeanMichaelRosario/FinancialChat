@@ -1,6 +1,7 @@
 ﻿using FinancialChat.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinancialChat.Controllers.Identity
@@ -9,10 +10,14 @@ namespace FinancialChat.Controllers.Identity
     public class ChatRoomController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHubContext<ChatRoomController> _chatHub;
+        private readonly ILogger<ChatRoomController> _logger;
 
-        public ChatRoomController(ApplicationDbContext context)
+        public ChatRoomController(ApplicationDbContext context, IHubContext<ChatRoomController> chatHub, ILogger<ChatRoomController> logger)
         {
             _context = context;
+            _chatHub = chatHub;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -50,6 +55,27 @@ namespace FinancialChat.Controllers.Identity
                 return RedirectToAction("Index");
             }
             return BadRequest("The name of the chatroom cannot be empty");
+        }
+
+        [HttpGet("stock={stockCode}")]
+        public async Task<IActionResult> PostMessage(string message)
+        {
+            try
+            {
+                var chatRoomMessage = new ChatRoomMessage()
+                {
+                    UserId = "0",
+                    Message = message
+                };
+
+                await _chatHub.Clients.All.SendAsync("ReceiveMessage", chatRoomMessage);
+                return RedirectToAction("Index", "ChatRoom");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical("Error trying to get the stock value", ex);
+            }
+            return BadRequest("Stock not Found");
         }
     }
 }
