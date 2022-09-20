@@ -1,0 +1,87 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@model FinancialChat.Data.ChatRoom
+@{
+    var userId = UserManager.GetUserId(User);
+    var chat = ViewBag.Chat;
+}
+<div class="h-100 chat-header clearfix">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="chat-about">
+                <h6 class="m-b-0">@chat.Name</h6>
+                <small>Amount of message in view: @chat.Messages.Count </small>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="chat-history">
+    <ul class="m-b-0" id="chat-messages">
+        @if (chat.Messages?.Count > 0)
+        {
+            @foreach (var item in chat.Messages)
+            {
+                <li class="clearfix">
+                    <div class="message @( item.UserId == userId ? "my-message" : "other-message float-right" ) my-message">@item.Message</div>
+                </li>
+            }
+        }
+    </ul>
+</div>
+<div class="chat-message clearfix">
+    <div class="input-group mb-0">
+        <input type="text" class="form-control" placeholder="Enter text here..." id="textMessage" />
+        <div class="input-group-append">
+            <input type="button" id="sendButton" value="Send Message" />
+        </div>
+    </div>
+</div>
+
+<script>
+    "use strict";
+    var userId = '@userId';
+    var connection = new signalR.HubConnectionBuilder().withUrl("/chat").build();
+
+    //Disable the send button until connection is established.
+    document.getElementById("sendButton").disabled = true;
+
+    connection.on("ReceiveMessage", function (data) {
+        var classForMessage = ((data.userId == userId) ? 'my-message' : 'other-message float-right');
+        var message =`
+                <li class="clearfix">
+                            <div class="message ${classForMessage}">${data.message}</div>
+                    </li>
+        `;
+        $("#chat-messages").append(message);
+        $(".message:last").get(0).scrollIntoView();
+    });
+
+    connection.start().then(function () {
+        document.getElementById("sendButton").disabled = false;
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+
+    document.getElementById("textMessage")
+        .addEventListener("keyup", function (event) {
+            event.preventDefault();
+            if (event.keyCode === 13) {
+                document.getElementById("sendButton").click();
+            }
+        });
+
+    document.getElementById("sendButton").addEventListener("click", function (event) {
+        var message = document.getElementById("textMessage").value;
+        var data = {
+            UserId: '@userId',
+            ChatId: '@chat.Id',
+            Message: message,
+        }
+        connection.invoke("SendMessage", data).catch(function (err) {
+            return console.error(err.toString());
+        });
+        event.preventDefault();
+        document.getElementById("textMessage").value = '';
+    });
+</script>
