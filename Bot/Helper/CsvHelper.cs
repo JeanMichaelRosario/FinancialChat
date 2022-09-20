@@ -1,6 +1,7 @@
 ﻿using CsvHelper;
 using System.Globalization;
 using System.Net;
+using System.Net.Http;
 
 namespace Bot.Helper
 {
@@ -9,17 +10,17 @@ namespace Bot.Helper
         public static async Task PostStockQuoteInformationToAllChatRooms(string chatUrl, string stockCode)
         {
             var url = $"https://stooq.com/q/l/?s={stockCode}&f=sd2t2ohlcv&h&e=csv";
-            var botMessage = GetBotMessage(url);
-            await PostBotMessage(botMessage, chatUrl);
+            var botMessage = await GetBotMessage(url);
+            await PostBotMessage(chatUrl, botMessage);
         }
 
-        private static Stream GetCsvFile(string url)
+        private static async Task<Stream> GetCsvFile(string url)
         {
             try
             {
-                var req = WebRequest.Create(url);
-                var response = req.GetResponse();
-                return response.GetResponseStream();
+                using var httpClient = new HttpClient();
+                var req = await httpClient.GetAsync(url);
+                return await req.Content.ReadAsStreamAsync();
             }
             catch (Exception ex)
             {
@@ -27,11 +28,11 @@ namespace Bot.Helper
             }
         }
 
-        private static Stock? GetStockData(string url)
+        private static async Task<Stock?> GetStockData(string url)
         {
             var stream = GetCsvFile(url);
 
-            using (var reader = new StreamReader(stream))
+            using (var reader = new StreamReader(await stream))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 var record = csv.GetRecords<Stock>().First();
@@ -43,9 +44,9 @@ namespace Bot.Helper
             }
         }
 
-        private static string GetBotMessage(string url)
+        private static async Task<string> GetBotMessage(string url)
         {
-            var stock = GetStockData(url);
+            var stock = await GetStockData(url);
             if (stock is null)
             {
                 throw new Exception("Quote not found!");
@@ -64,7 +65,7 @@ namespace Bot.Helper
             
             var content = new FormUrlEncodedContent(values);
 
-            var response = await client.PostAsync(chatUrl, content);
+            await client.PostAsync(chatUrl, content);
         }
 
 
