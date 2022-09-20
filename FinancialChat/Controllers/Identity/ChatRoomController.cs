@@ -10,10 +10,10 @@ namespace FinancialChat.Controllers.Identity
     public class ChatRoomController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IHubContext<ChatRoomController> _chatHub;
+        private readonly IHubContext<Chat> _chatHub;
         private readonly ILogger<ChatRoomController> _logger;
 
-        public ChatRoomController(ApplicationDbContext context, IHubContext<ChatRoomController> chatHub, ILogger<ChatRoomController> logger)
+        public ChatRoomController(ApplicationDbContext context, IHubContext<Chat> chatHub, ILogger<ChatRoomController> logger)
         {
             _context = context;
             _chatHub = chatHub;
@@ -57,7 +57,8 @@ namespace FinancialChat.Controllers.Identity
             return BadRequest("The name of the chatroom cannot be empty");
         }
 
-        [HttpGet("stock={stockCode}")]
+        [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> PostMessage(string message)
         {
             try
