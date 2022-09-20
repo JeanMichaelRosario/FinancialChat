@@ -14,11 +14,11 @@ namespace Bot.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet(Name = "stock={stockCode}")]
-        public async Task Get(string stockCode)
+        [HttpGet(Name = "stock={stock_code}")]
+        public async Task Get(string stock_code)
         {
             var url = _configuration.GetValue<string>("ChatUrl");
-            await Helper.CsvHelper.PostStockQuoteInformationToAllChatRooms(url, stockCode);
+            await Helper.CsvHelper.PostStockQuoteInformationToAllChatRooms(url, stock_code);
         }
     }
 }
